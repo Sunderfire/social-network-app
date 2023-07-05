@@ -1,4 +1,4 @@
-const { User, Thought } = require("../models");
+const { User } = require("../models");
 
 module.exports = {
   async getUser(req, res) {
@@ -14,7 +14,7 @@ module.exports = {
 
   async getUserById(req, res) {
     try {
-      const user = await User.findById(req.params.id);
+      const user = await User.findOne({ _id: req.params.userId });
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
@@ -38,10 +38,11 @@ module.exports = {
 
   async updateUser(req, res) {
     try {
-      const { userId, newData } = req.body;
-      const user = await User.findOneAndUpdate({ _id: userId }, newData, {
-        new: true,
-      });
+      const user = await User.findOneAndUpdate(
+        { _id: req.params.userId },
+        { $set: req.body },
+        { new: true }
+      );
 
       if (!user) {
         return res.status(404).json({ error: "User not found" });
@@ -54,7 +55,7 @@ module.exports = {
 
   async deleteUser(req, res) {
     try {
-      const user = await User.findOneAndDelete(req.params.id);
+      const user = await User.findOneAndDelete({ _id: req.params.userId });
 
       return res.json(user);
     } catch (error) {
@@ -64,17 +65,15 @@ module.exports = {
 
   async addFriend(req, res) {
     try {
-      const { userId, friendId } = req.params;
-
       const user = await User.findOneAndUpdate(
-        { _id: userId },
-        { $addToSet: { friends: friendId } },
+        { _id: req.params.userId },
+        { $addToSet: { friends: req.params.friendId } },
         { new: true }
       );
 
       if (!user) {
         return res.status(404).json({ error: "User not found" });
-      }
+      } else return res.json(user);
     } catch (error) {
       return res.status(500).json({ error: "Failed to add friend" });
     }
@@ -82,17 +81,15 @@ module.exports = {
 
   async deleteFriend(req, res) {
     try {
-      const { userId, friendId } = req.params;
-
       const user = await User.findOneAndUpdate(
-        { _id: userId },
-        { $pull: { friends: friendId } },
+        { _id: req.params.userId },
+        { $pull: { friends: req.params.friendId } },
         { new: true }
       );
 
       if (!user) {
         return res.status(404).json({ error: "User not found" });
-      }
+      } else return res.json(user);
     } catch (error) {
       return res.status(500).json({ error: "Failed to delete friend" });
     }
