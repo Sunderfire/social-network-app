@@ -62,8 +62,8 @@ module.exports = {
         _id: req.params.thoughtId,
       });
       await User.findOneAndUpdate(
-        { _id: req.body.userId },
-        { $pull: { thoughts: thoughtId } },
+        { thoughts: req.params.thoughtId },
+        { $pull: { thoughts: req.params.thoughtId } },
         { new: true }
       );
 
@@ -75,14 +75,13 @@ module.exports = {
 
   async createReaction(req, res) {
     try {
-      const { thoughtId } = req.body;
-      const newData = {
-        ...req.body,
-        thought: thoughtId,
-      };
-      const reaction = await Reaction.create(newData);
+      const thought = await Thought.findOneAndUpdate(
+        { _id: req.params.thoughtId },
+        { $addToSet: { reactions: req.body } },
+        { new: true }
+      );
 
-      return res.json(reaction);
+      return res.json(thought);
     } catch (error) {
       return res.status(500).json({ error: "Failed to create reaction" });
     }
@@ -90,10 +89,13 @@ module.exports = {
 
   async deleteReaction(req, res) {
     try {
-      const { thoughtId } = req.body;
-      const reaction = await Reaction.findOneAndDelete(thoughtId);
+      const thought = await Thought.findOneAndUpdate(
+        { thoughts: req.params.thoughtIdId },
+        { $pull: { reactions: { reactionId: req.params.reactionId } } },
+        { new: true }
+      );
 
-      return res.json(reaction);
+      return res.json(thought);
     } catch (error) {
       return res.status(500).json({ error: "Failed to delete reaction" });
     }
